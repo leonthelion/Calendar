@@ -6,6 +6,7 @@ var express = require('express')
   , path = require('path');
 var sys = require('sys');
 
+
 var app = express();
 var conString = "postgres://calendar:asdf@localhost:5432/calendar";
 //postgres://user:password@host:port/database
