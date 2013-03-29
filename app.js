@@ -27,19 +27,31 @@ app.configure(function(){
   app.use(function(req, res, next){
 	  res.status(404);
 	  res.writeHead(404, {'Content-Type' : 'text/html'});
-	  res.write("<h1>Error 404</h1><h3>This site doesn't exist.</h3><h3>Redirecting...</h3><script>setTimeout(function(){window.location.href=\'/\'}, 3000);</script>");
+	  var data = fs.readFileSync('./views/error/404.html', 'utf-8', function(err, data){
+		  if (err) throw err;
+		  return console.log(data);
+	  });
+	  res.write(data);
 	  res.end();
   });
   app.use(function(req, res, next){
 	  res.status(500);
 	  res.writeHead(500, {'Content-Type' : 'text/html'});
-	  res.write("<h1>Error 500</h1><h3>Internal Error.</h3><h3>Redirecting...</h3><script>setTimeout(function(){window.location.href=\'/\'}, 3000);</script>");
+	  var data = fs.readFileSync('./views/error/500.html', 'utf-8', function(err, data){
+		  if (err) throw err;
+		  return console.log(data);
+	  });
+	  res.write(data);
 	  res.end();
   });
   app.use(function(req, res, next){
 	  res.status(403);
 	  res.writeHead(403, {'Content-Type' : 'text/html'});
-	  res.write("<h1>Error 403</h1><h3>Access denied.</h3><h3>Redirecting...</h3><script>setTimeout(function(){window.location.href=\'/\'}, 3000);</script>");
+	  var data = fs.readFileSync('./views/error/403.html', 'utf-8', function(err, data){
+		  if (err) throw err;
+		  return console.log(data);
+	  });
+	  res.write(data);
 	  res.end();
   });
 });
