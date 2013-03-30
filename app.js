@@ -45,9 +45,9 @@ app.configure(function(){
 	  res.end();
   });
   app.use(function(req, res, next){
-	  res.status(403);
-	  res.writeHead(403, {'Content-Type' : 'text/html'});
-	  var data = fs.readFileSync('./views/error/403.html', 'utf-8', function(err, data){
+	  res.status(401);
+	  res.writeHead(401, {'Content-Type' : 'text/html'});
+	  var data = fs.readFileSync('./views/error/401.html', 'utf-8', function(err, data){
 		  if (err) throw err;
 		  return console.log(data);
 	  });
