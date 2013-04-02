@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login</title>
+	<link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link href="/stylesheets/bootstrap-responsive.min.css" rel="stylesheet">
+	<link href="/stylesheets/style.css" rel="stylesheet">
+	<script src="/javascripts/jquery-1.9.1.min.js" type="text/javascript"></script>
+	<script src="/javascripts/bootstrap.min.js" type="text/javascript"></script>
+</head>
+<body>
+	<div id="login-container">
+		<form class="form-horizontal" action="/setCookie" method="POST">
+  			<div class="control-group">
+  				<div class="controls">
+					<h3>Login</h3>
+					<br/>
+				</div>
+    			<label class="control-label" for="inputUsernme">Username</label>
+    			<div class="controls">
+      				<input type="text" id="inputUsername" placeholder="Username" name="username">
+    			</div>
+  			</div>
+  			<div class="control-group">
+    			<label class="control-label" for="inputPassword">Password</label>
+    			<div class="controls">
+      				<input type="password" id="inputPassword" placeholder="Password" name="password">
+    			</div>
+  			</div>
+  			<div class="control-group">
+    			<div class="controls">
+<!--      				<label class="checkbox"> -->
+<!--         				<input type="checkbox"> Remember me -->
+<!--       				</label> -->
+      				<button type="submit" class="btn" id="login-btn">Sign in</button>
+    			</div>
+  			</div>
+		</form>
+	</div>
+</body>
+</html>

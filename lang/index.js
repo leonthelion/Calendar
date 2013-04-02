@@ -13,14 +13,17 @@ exports.de_de = function(req, res){
 		save: 'Speichern',
 		del: 'L&ouml;schen',
 		modalAddEntryHeader: 'neuer Kalendereintrag',
-		modalEditEntryHeader: 'Kalendereintrag editieren',
+		modalEditEntryHeader: 'Kalendereintrag bearbeiten',
 		entryTitle: 'Titel',
 		entryDescr: 'Beschreibung',
 		entryStartDate: 'Startdatum',
 		entryEndDate: 'Enddatum',
 		entryStartTime: 'Startzeitpunkt',
 		entryEndTime: 'Endzeitpunkt',
-		refreshBtn: 'aktualisieren'
+		refreshBtn: 'aktualisieren',
+		login: 'Login',
+		username: 'Benutzername',
+		password: 'Passwort'
 	});
 };
 
@@ -39,6 +42,9 @@ exports.en_gb = function(req, res){
 		entryEndDate: 'End Date',
 		entryStartTime: 'Start Time',
 		entryEndTime: 'End Time',
-		refreshBtn: 'refresh'
+		refreshBtn: 'refresh',
+		login: 'Login',
+		username: 'Username',
+		password: 'Password'
 	});
 };
