@@ -10,7 +10,6 @@ var express			 = require('express')
 var app = express();
 var conString = "postgres://calendar:asdf@localhost:5432/calendar";
 //postgres://user:password@host:port/database
-// var client = new pg.Client(conStringLogin);
 function isInArray(value, array) {
 	for (var i=0; i<array.length; i++) {
 		if (array[i] === value) {
@@ -19,6 +18,7 @@ function isInArray(value, array) {
 	}
 	return false;
 }
+var key = 'MIICXAIBAAKBgQChm75ObmHa7tjxfNHsJ8orMACCjurZbQDqpJFPXiYXbTlOhP+LDi8cl1WmK4Y9vKNgMSAu3tCvy3kb8qGh/yCLYHEVnz678dM2K8yRW7uc/4VAztwkYOTfoydwmdA1C1og7CiiQtvkwoTxwv3kGlFb18whJee2YOBQ0B6GXGFy6wIDAQABAoGABYfyDHckrDyOej1eZem6tp2u9sjzarubU2yMeJ3tSdH4KyLMKDM1E5JuYQCOWKCTKuCjjFcd51Zcb8NvGr9DmtOjJpBLKmrDrKzg2XLGipAIsgMLG0TpUzAuMhj1D8bNmLu/CPO+RndEx3mF85u531fr5KtypDYv8R4ogyyCJnkCQQDU8CKKgSLaRLUz3GnBl9HSsq053sTdGq5fXXBBnaWqdjvmbEDRgtIlk93B4Mu/dQJ9pDWalD17kDtyK6Tx+msdAkEAwkpByDA4bfHdAriI4tf4iMjBfkOHdZHMp/Qy406qySpA3DfK7UUwkWLl3DM4zjG2ZNt/a+dtY0xIQkG1W6RvpwJBAJEW+oIjUYsly84Ffm3xs398Tbojx0HcvzmtoiKjd1E59MChvFzFZclDApPrRwkygjr326pzHZ2G/mphwKc8eSUCQDKIB6XeTL7jmdy8S/Xbv+src4+4VoHQgs7n51hRPIAHekkMRb4CMciOVUQ5Gjwel9aRdAmHbl7WFzEMT/Pex58CQCtIeFjbrzUq8hWkDP35HlnLjHRCfeFER+4xLaFsPedjIaPmfnKEd8oHNh3WmptHFPsgOWpG8+ygOYpt7FRuxYA=';
 
 app.engine('.html', require('ejs').__express);
 
@@ -26,32 +26,13 @@ app.configure(function(){
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'html');
-  app.use(express.favicon());
+  app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
-  app.use(express.cookieParser('secret'));
+  app.use(express.cookieParser(key));
   app.use(express.session());
-  app.use(express.query());
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(app.router);
-//  app.use(function(req, res, next){
-//	  if(res.status(401)) {
-//		  res.writeHead(401, {'Content-Type' : 'text/html'});
-//		  var data = fs.readFileSync('./views/error/401.html', 'utf-8');
-//		  res.write(data);
-//		  res.end();
-//	  } else if(res.status(404)) {
-//		  res.writeHead(404, {'Content-Type' : 'text/html'});
-//		  var data = fs.readFileSync('./views/error/404.html', 'utf-8');
-//		  res.write(data);
-//		  res.end();
-//	  } else if(res.status(500)) {
-//		  res.writeHead(500, {'Content-Type' : 'text/html'});
-//		  var data = fs.readFileSync('./views/error/500.html', 'utf-8');
-//		  res.write(data);
-//		  res.end();
-//	  }
-//  });
 });
 
 app.configure('development', function(){
@@ -64,7 +45,7 @@ process.on('uncaughtException', function(err) {
 
 app.get('/', function(req, res){
 	pg.connect(conString, function(err, client, done){
-		var query = client.query("SELECT * FROM users WHERE username = '" + req.cookies.username + "' AND pass = '" + req.cookies.password + "'");
+		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
 		console.log(req.signedCookies);
 		var users = [];
 		query.on('row', function(row) {
@@ -125,8 +106,6 @@ app.post('/setCookie', function(req, res){
 				res.redirect('/login');
 				res.end();
 			} else {
-//				res.setHeader('Set-Cookie', 'username=' + req.body.username, {signed : true});
-//				res.setHeader('Set-Cookie', 'password=' + req.body.password, {signed : true});
 				res.cookie('username', req.body.username, {signed : true});
 				res.cookie('password', req.body.password, {signed : true});
 				res.redirect('/home');
