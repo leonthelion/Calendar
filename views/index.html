@@ -128,7 +128,8 @@
 			});
 		}
 		
-		function initiateCalendar(buttonText, monthNames, monthNamesShort, dayNames, dayNamesShort) {
+		$(function() {
+			
 			$('#calendar').fullCalendar({
 				height : 700,
 				header : {
@@ -160,15 +161,15 @@
 				    next:     '&rsaquo;', // >
 			    	prevYear: '&laquo;',  // <<
 			    	nextYear: '&raquo;',  // >>
-			    	today:    buttonText[0],
-			    	month:    buttonText[1],
-			    	week:     buttonText[2],
-			    	day:      buttonText[3]
+			    	today:    'today',
+			    	month:    'month',
+			    	week:     'week',
+			    	day:      'day'
 				},
-				monthNames : [monthNames[0], monthNames[1], monthNames[2], monthNames[3], monthNames[4], monthNames[5], monthNames[6], monthNames[7], monthNames[8], monthNames[9], monthNames[10], monthNames[11]],
-				monthNamesShort : [monthNamesShort[0], monthNamesShort[1], monthNamesShort[2], monthNamesShort[3], monthNamesShort[4], monthNamesShort[5], monthNamesShort[6], monthNamesShort[7], monthNamesShort[8], monthNamesShort[9], monthNamesShort[10], monthNamesShort[11]],
-				dayNames : [dayNames[0], dayNames[1], dayNames[2], dayNames[3], dayNames[4], dayNames[5], dayNames[6]],
-				dayNamesShort : [dayNamesShort[0], dayNamesShort[1], dayNamesShort[2], dayNamesShort[3], dayNamesShort[4], dayNamesShort[5], dayNamesShort[6]],
+				monthNames : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				monthNamesShort : ['Jan', 'Feb', 'Apr', 'Mar', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+				dayNames : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+				dayNamesShort : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 				eventBackgroundColor : 'rgb(255, 228, 92)',
 				eventBorderColor : 'rgb(255, 228, 92)',
 				eventClick: function(calEvent) {
@@ -196,42 +197,22 @@
 			    	});
 			    }
 			})
-		}
-		
-		
-		
-		function initiateDatepicker(dateFormat, dayNames, dayNamesMin, monthNames, monthNamesShort) {
 			$('#inputStartDate').datepicker({
-				dateFormat: dateFormat,
-				dayNames: [dayNames[0], dayNames[1], dayNames[2], dayNames[3], dayNames[4], dayNames[5], dayNames[6]],
-				dayNamesMin: [dayNamesMin[0], dayNamesMin[1], dayNamesMin[2], dayNamesMin[3], dayNamesMin[4], dayNamesMin[5], dayNamesMin[6]],
+				dateFormat: 'yy-mm-dd',
+				dayNames: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+				dayNamesMin: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 				firstDay: 1,
-				monthNames: [monthNames[0], monthNames[1], monthNames[2], monthNames[3], monthNames[4], monthNames[5], monthNames[6], monthNames[7], monthNames[8], monthNames[9], monthNames[10], monthNames[11]],
-				monthNamesShort: [monthNamesShort[0], monthNamesShort[1], monthNamesShort[2], monthNamesShort[3], monthNamesShort[4], monthNamesShort[5], monthNamesShort[6], monthNamesShort[7], monthNamesShort[8], monthNamesShort[9], monthNamesShort[10], monthNamesShort[11]]
+				monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				monthNamesShort: ['Jan', 'Feb', 'Apr', 'Mar', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 			});
 			$('#inputEndDate').datepicker({
-				dateFormat: dateFormat,
-				dayNames: [dayNames[0], dayNames[1], dayNames[2], dayNames[3], dayNames[4], dayNames[5], dayNames[6]],
-				dayNamesMin: [dayNamesMin[0], dayNamesMin[1], dayNamesMin[2], dayNamesMin[3], dayNamesMin[4], dayNamesMin[5], dayNamesMin[6]],
+				dateFormat: 'yy-mm-dd',
+				dayNames: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+				dayNamesMin: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 				firstDay: 1,
-				monthNames: [monthNames[0], monthNames[1], monthNames[2], monthNames[3], monthNames[4], monthNames[5], monthNames[6], monthNames[7], monthNames[8], monthNames[9], monthNames[10], monthNames[11]],
-				monthNamesShort: [monthNamesShort[0], monthNamesShort[1], monthNamesShort[2], monthNamesShort[3], monthNamesShort[4], monthNamesShort[5], monthNamesShort[6], monthNamesShort[7], monthNamesShort[8], monthNamesShort[9], monthNamesShort[10], monthNamesShort[11]]
+				monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				monthNamesShort: ['Jan', 'Feb', 'Apr', 'Mar', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 			});
-		}
-		
-		$(function() {
-			
-			//initiating fullcalendar and datepicker, getting events
-			if (window.location.pathname === '/en-gb') {
-				initiateCalendar(['today', 'month', 'week', 'day'], ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
-				initiateDatepicker('yy-mm-dd', ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-			} else if (window.location.pathname === '/de-de') {
-				initiateCalendar(['Heute', 'Monat', 'Woche', 'Tag'], ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'], ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'], ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'], ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']);
-				initiateDatepicker('yy-mm-dd', ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'], ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'], ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'], ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']);
-			} else {
-				initiateCalendar(['today', 'month', 'week', 'day'], ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
-				initiateDatepicker('yy-mm-dd', ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
-			}
 			$('#calendar').fullCalendar('removeEvents');
 			getEvents();
 			
