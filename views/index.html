@@ -19,11 +19,21 @@
 		var action;
 		var calendarEvent;
 		
+		function getCSRFToken(action) {
+			$.ajax({
+				url: "getCSRFToken",
+				type: "GET",
+				success: function(data) {
+					action(data.token);
+				}
+			});
+		}
+		
 		function getEvents() {
 			$('#calendar').fullCalendar('removeEvents');
 			$.ajax({
 				url : "/getEvents",
-				type : "POST",
+				type : "GET",
 				success : function(data){
 					for (i=0; i<data.length; i++) {
 						$('#calendar').fullCalendar('renderEvent', {id : data[i].id, title : data[i].title, description : data[i].description, start : data[i].start_date + 'T' + data[i].start_time + ':00Z', end : data[i].end_date + 'T' + data[i].end_time + ':00Z', allDay : data[i].allDay}, true);
@@ -45,41 +55,49 @@
 					"start_time" : $('#inputStartTime').val(),
 					"end_time" : $('#inputEndTime').val()
 			};
-			$.ajax({
-				url : "/addEvent",
-				type : "POST",
-			    contentType: "application/x-www-form-urlencoded",
-				data : newEvent,
-				success : function(){
-					console.log('Success!');
-				},
-				error : function(){
-					console.log('Error!');
-				}
+			
+			getCSRFToken(function(token){
+				newEvent._csrf = token;
+				$.ajax({
+					url : "/addEvent",
+					type : "POST",
+				    contentType: "application/x-www-form-urlencoded",
+					data : newEvent,
+					success : function(){
+						getEvents();
+						console.log('Success!');
+					},
+					error : function(){
+						console.log('Error!');
+					}
+				});				
 			});
 		}
 		
 		function delEvent(calEvent) {
-			$.ajax({
-				url : "/delEvent",
-				type : "POST",
-			    contentType: "application/x-www-form-urlencoded",
-				data : {"id" : calEvent.id},
-				success : function(){
-					console.log('Success!');
-				},
-				error : function(){
-					console.log('Error!');
-				}
+			getCSRFToken(function(token){
+				var data = {
+						"id" : calEvent.id
+				};
+				data._csrf = token;
+				$.ajax({
+					url : "/delEvent",
+					type : "POST",
+				    contentType: "application/x-www-form-urlencoded",
+					data : data,
+					success : function(){
+						console.log('Success!');
+					},
+					error : function(){
+						console.log('Error!');
+					}
+				});
 			});
 		}
 		
 		function updateEvent(calEvent) {
-			$.ajax({
-				url : "/updateEvent",
-				type : "POST",
-			    contentType: "application/x-www-form-urlencoded",
-				data : {
+			getCSRFToken(function(token){
+				var data = {
 					"id" : calEvent.id,
 					"title" : calEvent.title,
 					"description" : calEvent.description,
@@ -93,13 +111,20 @@
 					"newEnd_date" : $('#inputEndDate').val(),
 					"newStart_time" : $('#inputStartTime').val(),
 					"newEnd_time" : $('#inputEndTime').val()
-				},
-				success : function(){
-					console.log('Success!');
-				},
-				error : function(){
-					console.log('Error!');
-				}
+				};
+				data._csrf = token;
+				$.ajax({
+					url : "/updateEvent",
+					type : "POST",
+				    contentType: "application/x-www-form-urlencoded",
+					data : data,
+					success : function(){
+						console.log('Success!');
+					},
+					error : function(){
+						console.log('Error!');
+					}
+				});
 			});
 		}
 		
@@ -286,7 +311,6 @@
 						$('#modalAddEntry').modal('toggle');
 						addEvent();
 						$('#calendar').fullCalendar('removeEvents');
-						getEvents();
 					} else if(action==='edit') {
 						$('#modalAddEntry').modal('toggle');
 						updateEvent(calendarEvent);
@@ -305,31 +329,17 @@
 			$('#refresh-btn').click(function(){
 				getEvents();
 			});
-			
-// 			$('#logoutBtn').click(function(){
-// 				window.location.pathname = '/destroySession';
-// 			});
-			
 		});
-		
 	</script>
 </head>
 <body>
 	<br/>
 	<div class="container">
 		<h1>Calendar</h1>
-<!-- 		<div id="langSwitcher"> -->
-<!-- 			<a href="/de-de"><img src="/images/german.jpg"></a> -->
-<!-- 			<a href="/en-gb"><img src="/images/english.jpg"></a> -->
-<!-- 		</div> -->
 		<br/>
-<!-- 		<form action="/destroySession" method="POST"> -->
-<!-- 			<button id="logoutBtn" class="btn">Logout</button> -->
-<!-- 		</form> -->
-<!-- 		<br/><br/> -->
 		<div id="calendar"></div>
 		<br/>
-		<form action="/destroySession" method="POST">
+		<form action="/destroySession" method="GET">
 			<a id="btnShowModal" href="#modalAddEntry" role="button" class="btn btn-warning" data-toggle="modal">new calendar entry</a>
 			<a id="refresh-btn" role="button" class="btn btn-warning">refresh</a>
 			<button id="logoutBtn" class="btn" type="submit">Logout</button>
