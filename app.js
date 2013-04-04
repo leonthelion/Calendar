@@ -162,7 +162,6 @@ app.post('/sendemail', function(req, res){
 		text:    "Thank you for registering,\nclick on the link below to validate your email address. Afterwards you will be able to log in and use the calendar application.\nhttp://localhost:3000/", 
 		from:    "Calendar App <email.calendar.app@gmail.com>", 
 		to:      req.body.username + " <" + req.body.email + ">",
-//		"Luca Junk <lucaleonjunk@web.de>"
 		subject: "EMail Validation"
 	}, function(err, message){
 		console.log(err || message);
