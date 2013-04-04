@@ -1,3 +1,19 @@
+Database Structure
+==================
+
+(PostgreSQL)
+
+Login-Role
+----------
+
+CREATE ROLE calendar LOGIN
+  ENCRYPTED PASSWORD 'md5d59e94521cf2928c17e7355929775433'
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+
+Database
+--------
+
 CREATE DATABASE calendar
   WITH OWNER = calendar
        ENCODING = 'UTF8'
@@ -6,6 +22,9 @@ CREATE DATABASE calendar
        LC_CTYPE = 'German_Germany.1252'
        CONNECTION LIMIT = -1;
        
+       
+Tables
+------
 
 CREATE TABLE calendar
 (
@@ -17,6 +36,7 @@ CREATE TABLE calendar
   start_time character varying(5),
   end_time character varying(5),
   allday boolean DEFAULT false,
+  userid integer,
   CONSTRAINT calendar_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -27,7 +47,7 @@ ALTER TABLE calendar
   
   
   
-  CREATE TABLE users
+CREATE TABLE users
 (
   id serial NOT NULL,
   username character varying(25),
