@@ -5,6 +5,7 @@ var express			 = require('express')
   , fs				 = require('fs')
   , pg				 = require('pg')
   , path			 = require('path')
+  , email			 = require('emailjs')
   , config			 = require('./config');
 
 
@@ -18,6 +19,12 @@ function isInArray(value, array) {
 	}
 	return false;
 }
+var emailServer = email.server.connect({
+	   user:    config.web.email.user,
+	   password:config.web.email.password,
+	   host:    config.web.email.host,
+	   ssl:     config.web.email.ssl
+});
 app.engine('.html', require('ejs').__express);
 
 app.configure(function(){
@@ -94,11 +101,11 @@ app.post('/setCookie', function(req, res){
 	var errors = req.validationErrors();
 	if (errors) {
 		if (errors[0].param === 'username' && errors[errors.length-1].param === 'username') {
-			res.redirect('/login?username=' + req.body.username + '&password=' + req.body.password + '&usernameStatus=invalid&passwordStatus=valid');
+			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=valid');
 		} else if (errors[0].param === 'password') {
-			res.redirect('/login?username=' + req.body.username + '&password=' + req.body.password + '&usernameStatus=valid&passwordStatus=invalid');
+			res.redirect('/login?username=' + req.body.username + '&usernameStatus=valid&passwordStatus=invalid');
 		} else if (errors[0].param === 'username' && errors[errors.length-1].param === 'password') {
-			res.redirect('/login?username=' + req.body.username + '&password=' + req.body.password + '&usernameStatus=invalid&passwordStatus=invalid');
+			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=invalid');
 		}
 	    return;
 	}
@@ -112,6 +119,9 @@ app.post('/setCookie', function(req, res){
 		query.on('end', function() {
 			done();
 			if (users.length === 0) {
+				res.redirect('/login');
+				res.end();
+			} else if (users[0].validated === false) {
 				res.redirect('/login');
 				res.end();
 			} else {
@@ -130,6 +140,35 @@ app.get('/destroySession', function(req, res){
 	res.redirect('/');
 	res.end();
 });
+app.get('/register', function(req, res){
+	res.render('register', {
+		token : req.session._csrf
+	});
+});
+app.post('/signUp', function(req, res){
+	pg.connect(conString, function(err, client, done){
+		var query = client.query("INSERT INTO users (username, email, pass, validated) VALUES ('" + req.body.username + "', '" + req.body.email + "', '" + req.body.password + "', false)");
+		query.on('end', function(row){
+			done();
+			res.end();
+		});
+	});
+});
+app.post('/sendemail', function(req, res){
+//	pg.connect(conString, function(err, client, done){
+//		var query = client.query("SELECT email FROM users WHERE username='" + req.body.username + "' AND email='" + req.body.email + "' AND pass='" + req.body.password + "'");
+//	});
+	emailServer.send({
+		text:    "Thank you for registering,\nclick on the link below to validate your email address. Afterwards you will be able to log in and use the calendar application.\nhttp://localhost:3000/", 
+		from:    "Calendar App <email.calendar.app@gmail.com>", 
+		to:      req.body.username + " <" + req.body.email + ">",
+//		"Luca Junk <lucaleonjunk@web.de>"
+		subject: "EMail Validation"
+	}, function(err, message){
+		console.log(err || message);
+	});
+	res.end();
+});
 app.post('/addEvent', function(req, res){
 	
 	pg.connect(conString, function(err, client, done){
@@ -138,10 +177,9 @@ app.post('/addEvent', function(req, res){
 		query.on('row', function(row){
 			id = row.id;
 		});
-		query.on('end', function(roq){
+		query.on('end', function(){
 			query = client.query("INSERT INTO calendar (title, description, start_date, end_date, start_time, end_time, userid) VALUES ('" + req.body.title + "', '" + req.body.description + "', '" + req.body.start_date + "', '" + req.body.end_date + "', '" + req.body.start_time + "', '" + req.body.end_time + "', " + id + ")");
 		});
-//		query = client.query("INSERT INTO calendar (title, description, start_date, end_date, start_time, end_time, userid) VALUES ('" + req.body.title + "', '" + req.body.description + "', '" + req.body.start_date + "', '" + req.body.end_date + "', '" + req.body.start_time + "', '" + req.body.end_time + "', " + id + ")");
 		done();
 	});
 	

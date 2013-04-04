@@ -15,7 +15,6 @@
 		}
 		$(function(){
 			$('#inputUsername').val(getURLParameter('username'));
-			$('#inputPassword').val(getURLParameter('password'));
 			if (getURLParameter('usernameStatus') === 'invalid' && getURLParameter('passwordStatus') === 'valid') {
 				console.log('test');
 				$('#inputUsernameControl').addClass('error');
@@ -29,7 +28,7 @@
 	</script>
 </head>
 <body>
-	<div id="login-container">
+	<div class="custom-container">
 		<form class="form-horizontal" action="/setCookie" method="POST">
   			<div class="control-group" id="inputUsernameControl">
   				<div class="controls">
@@ -52,6 +51,13 @@
     			<div class="controls">
       				<button type="submit" class="btn" id="login-btn">Sign in</button>
     			</div>
+  			</div>
+		</form>
+		<form class="form-horizontal" action="/register" method="GET">
+  			<div class="control-group" id="inputUsernameControl">
+  				<div class="controls">
+					<button class="btn btn-primary" id="register-btn">Sign up</button>
+				</div>
   			</div>
 		</form>
 	</div>

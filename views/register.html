@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sign Up</title>
+	<link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link href="/stylesheets/bootstrap-responsive.min.css" rel="stylesheet">
+	<link href="/stylesheets/style.css" rel="stylesheet">
+	<script src="/javascripts/jquery-1.9.1.min.js" type="text/javascript"></script>
+	<script src="/javascripts/bootstrap.min.js" type="text/javascript"></script>
+	<script src="/javascripts/validator-min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		function getCSRFToken(action) {
+			$.ajax({
+				url: "getCSRFToken",
+				type: "GET",
+				success: function(data) {
+					console.log('got csrf token');
+					action(data.token);
+				},
+				error: function(){
+					console.log('cannot get csrf token');
+				}
+			});
+		}
+		$(function(){
+			$('#signup-btn').click(function(){
+				$('#inputUsernameControl').removeClass('error');
+				$('#inputEmailControl').removeClass('error');
+				$('#inputPasswordControl').removeClass('error');
+				$('#inputPasswordConfirmControl').removeClass('error');
+				var errors = 0;
+				try {
+					check($('#inputUsername').val()).len(5, 25).notContains(' ').isAlphanumeric();
+				} catch (e) {
+					console.log('invalid username');
+					$('#inputUsernameControl').addClass('error');
+					$('#inputUsername').tooltip({'trigger':'hover', 'placement': 'right', 'title': "length: 5 - 25 characters, shouldn't contain any spaces or special characters"});
+					errors++;
+				}
+				try {
+					check($('#inputEmail').val()).isEmail();
+				} catch (e) {
+					console.log('invalid email');
+					$('#inputEmailControl').addClass('error');
+					$('#inputEmail').tooltip({'trigger':'hover', 'placement': 'right', 'title': "enter a valid email address"});
+					errors++;
+				}
+				try {
+					check($('#inputPassword').val()).len(4, 16).notContains(' ');
+				} catch (e) {
+					console.log('invalid password');
+					$('#inputPasswordControl').addClass('error');
+					$('#inputPassword').tooltip({'trigger':'hover', 'placement': 'right', 'title': 'length: 4 - 16 characters, no spaces'});
+					errors++;
+				}
+				try {
+					check($('#inputPasswordConfirm').val()).equals($('#inputPassword').val());
+				} catch (e) {
+					console.log('passwords not equal');
+					$('#inputPasswordConfirmControl').addClass('error');
+					$('#inputPasswordConfirm').tooltip({'trigger':'hover', 'placement': 'right', 'title': 'Make sure you entered the same password as above.'});
+					errors++;
+				}
+				
+				if (errors === 0) {
+					var newUser = {
+						username: $('#inputUsername').val(),
+						email : $('#inputEmail').val(),
+						password: $('#inputPassword').val()
+					};
+					getCSRFToken(function(token){
+						newUser._csrf = token;
+						$.ajax({
+							url: '/signUp',
+							type: 'POST',
+							data: newUser,
+							success: function(){
+								console.log('success');
+								getCSRFToken(function(token){
+									$.ajax({
+										url: '/sendemail',
+										type: 'POST',
+										data: newUser,
+										success: function(){
+											console.log('email has been sent');
+											$('#modalSignUpCompleted').modal('show');
+										},
+										error: function(){
+											console.log('cannot send email');
+										}
+									});
+								});
+							},
+							error: function(){
+								console.log('error');
+							}
+						});
+					});
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+	<div class="custom-container">
+		<form class="form-horizontal">
+  			<div class="control-group" id="inputUsernameControl">
+  				<div class="controls">
+					<h3>Sign Up</h3>
+					<br/>
+				</div>
+    			<label class="control-label" for="inputUsername">Username</label>
+    			<div class="controls">
+      				<input type="text" id="inputUsername" placeholder="Username" name="username">
+      				<input type="hidden" name="_csrf" value="<%=token %>">
+    			</div>
+  			</div>
+  			<div class="control-group" id="inputEmailControl">
+    			<label class="control-label" for="inputEmail">Email</label>
+    			<div class="controls">
+      				<input type="text" id="inputEmail" placeholder="example@example.com" name="email">
+    			</div>
+  			</div>
+  			<div class="control-group" id="inputPasswordControl">
+    			<label class="control-label" for="inputPassword">Password</label>
+    			<div class="controls">
+      				<input type="password" id="inputPassword" placeholder="Password" name="password">
+    			</div>
+  			</div>
+  			<div class="control-group" id="inputPasswordConfirmControl">
+    			<label class="control-label" for="inputPasswordConfirm">Confirm Password</label>
+    			<div class="controls">
+      				<input type="password" id="inputPasswordConfirm" placeholder="Confirm Password" name="passwordConfirm">
+    			</div>
+  			</div>
+  			<div class="control-group">
+    			<div class="controls">
+<!--       				<button class="btn" id="signup-btn">Sign up</button> -->
+    			</div>
+  			</div>
+		</form>
+		<button class="btn" id="signup-btn">Sign up</button>
+	</div>
+<!-- modal -->
+	<div class="modal hide fade" id="modalSignUpCompleted">
+  		<div class="modal-header">
+    		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    		<h3>Sign Up Completed</h3>
+  		</div>
+ 		<div class="modal-body">
+    		<p>Thank you for registering on this site.<br/>Your sign up was successful!<br/>The only thing you have to do now before you can login, is validating your e-mail-address.<br/>Do this by clicking on the link in the e-mail we sent to your e-mail account.<br/>Don't forget to check the spam folder.</p>
+  		</div>
+  		<div class="modal-footer">
+    		<a href="/login" class="btn">back to home</a>
+  		</div>
+	</div>
+<!-- /modal -->
+</body>
+</html>
