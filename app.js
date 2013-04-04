@@ -6,6 +6,7 @@ var express			 = require('express')
   , pg				 = require('pg')
   , path			 = require('path')
   , email			 = require('emailjs')
+  , crypto			 = require('crypto')
   , config			 = require('./config');
 
 
@@ -89,6 +90,7 @@ app.get('/home', function(req, res){
 	});
 });
 app.get('/login', function(req, res){
+	var hash = crypto.createHeash('sha1');
 	res.render('login', {
 		token : req.session._csrf
 	});
@@ -114,7 +116,7 @@ app.post('/setCookie', function(req, res){
 		var query = client.query("SELECT * FROM users WHERE username = '" + req.body.username + "' AND pass = '" + req.body.password + "'");
 		var users = [];
 		query.on('row', function(row) {
-			users.push({username : row.username, password : row.pass});
+			users.push({username : row.username, password : row.pass, validated : row.validated});
 		});
 		query.on('end', function() {
 			done();

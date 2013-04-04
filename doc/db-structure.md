@@ -51,7 +51,9 @@ CREATE TABLE users
 (
   id serial NOT NULL,
   username character varying(25),
-  pass character varying(25),
+  email character varying,
+  pass character varying(16),
+  validated boolean,
   CONSTRAINT users_pkey PRIMARY KEY (id)
 )
 WITH (
