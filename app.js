@@ -9,6 +9,7 @@ var express			 = require('express')
 
 
 var app = express();
+var conString = config.db.url;
 function isInArray(value, array) {
 	for (var i=0; i<array.length; i++) {
 		if (array[i] === value) {
@@ -17,28 +18,10 @@ function isInArray(value, array) {
 	}
 	return false;
 }
-
-function getEvents(req, res) {
-	pg.connect(config.db.url, function(err, client, done){
-		res.writeHead(200, {'Content-Type' : 'application/json'});
-		var query = client.query('SELECT * FROM calendar');
-		var response = [];
-		query.on('row', function(row) {
-			response.push({ id : row.id, title : row.title, description : row.description, start_date : row.start_date, end_date : row.end_date, start_time : row.start_time, end_time : row.end_time, allDay : row.allday});
-		});
-
-		query.on('end', function() {
-			res.write(JSON.stringify(response));
-			done();
-			res.end();
-		});
-	});
-}
-
 app.engine('.html', require('ejs').__express);
 
 app.configure(function(){
-  app.set('port', process.env.PORT || config.web.port || 3000);
+  app.set('port', process.env.PORT || config.web.port);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'html');
   app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
@@ -61,7 +44,7 @@ process.on('uncaughtException', function(err) {
 });
 
 app.get('/', function(req, res){
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
 		var users = [];
 		query.on('row', function(row) {
@@ -79,7 +62,7 @@ app.get('/', function(req, res){
 	});
 });
 app.get('/home', function(req, res){
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
 		var users = [];
 		query.on('row', function(row) {
@@ -120,7 +103,7 @@ app.post('/setCookie', function(req, res){
 	    return;
 	}
 	
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("SELECT * FROM users WHERE username = '" + req.body.username + "' AND pass = '" + req.body.password + "'");
 		var users = [];
 		query.on('row', function(row) {
@@ -149,8 +132,16 @@ app.get('/destroySession', function(req, res){
 });
 app.post('/addEvent', function(req, res){
 	
-	pg.connect(config.db.url, function(err, client, done){
-		var query = client.query("INSERT INTO calendar (title, description, start_date, end_date, start_time, end_time) VALUES ('" + req.body.title + "', '" + req.body.description + "', '" + req.body.start_date + "', '" + req.body.end_date + "', '" + req.body.start_time + "', '" + req.body.end_time + "')");
+	pg.connect(conString, function(err, client, done){
+		var id;
+		var query = client.query("SELECT id FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
+		query.on('row', function(row){
+			id = row.id;
+		});
+		query.on('end', function(roq){
+			query = client.query("INSERT INTO calendar (title, description, start_date, end_date, start_time, end_time, userid) VALUES ('" + req.body.title + "', '" + req.body.description + "', '" + req.body.start_date + "', '" + req.body.end_date + "', '" + req.body.start_time + "', '" + req.body.end_time + "', " + id + ")");
+		});
+//		query = client.query("INSERT INTO calendar (title, description, start_date, end_date, start_time, end_time, userid) VALUES ('" + req.body.title + "', '" + req.body.description + "', '" + req.body.start_date + "', '" + req.body.end_date + "', '" + req.body.start_time + "', '" + req.body.end_time + "', " + id + ")");
 		done();
 	});
 	
@@ -165,31 +156,41 @@ app.get('/getCSRFToken', function(req, res){
 });
 app.get('/getEvents', function(req, res){
 	console.log("/getEvents");
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
-		var users = [];
+		users = [];
 		query.on('row', function(row) {
-			users.push({username : row.username, password : row.pass});
+			users.push({id : row.id, username : row.username, password : row.pass});
 		});
 		
 		query.on('end', function() {
 			done();
 			if (users.length === 1) {
-				access = true;
+				pg.connect(conString, function(err, client, done){
+					console.log('test');
+					res.writeHead(200, {'Content-Type' : 'application/json'});
+					console.log(JSON.stringify(users[0]));
+					var query = client.query('SELECT * FROM calendar WHERE userid = ' + users[0].id);
+					var response = [];
+					query.on('row', function(row) {
+						response.push({ id : row.id, title : row.title, description : row.description, start_date : row.start_date, end_date : row.end_date, start_time : row.start_time, end_time : row.end_time, allDay : row.allday});
+					});
+
+					query.on('end', function() {
+						res.write(JSON.stringify(response));
+						done();
+						res.end();
+					});
+				});
 			} else {
 				res.redirect('/login');
 			}
 		});
 	});
-	setTimeout(function(){
-		if (access===true) {
-			getEvents(req, res);
-		}
-	}, 250);
 });
 app.post('/updateEvent', function(req, res){
 	
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("UPDATE calendar SET title='" + req.body.newTitle + "', description='" + req.body.newDescription + "', start_date='" + req.body.newStart_date + "', end_date='" + req.body.newEnd_date + "', start_time='" + req.body.newStart_time + "', end_time='" + req.body.newEnd_time + "' WHERE id=" + req.body.id);
 		done();
 	});
@@ -200,7 +201,7 @@ app.post('/updateEvent', function(req, res){
 });
 app.post('/delEvent', function(req, res){
 	
-	pg.connect(config.db.url, function(err, client, done){
+	pg.connect(conString, function(err, client, done){
 		var query = client.query("DELETE FROM calendar WHERE id = " + req.body.id);
 		query.on('end', function(){
 			done();
