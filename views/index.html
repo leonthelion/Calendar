@@ -21,7 +21,7 @@
 		
 		function getCSRFToken(action) {
 			$.ajax({
-				url: "getCSRFToken",
+				url: "/getCSRFToken",
 				type: "GET",
 				success: function(data) {
 					action(data.token);

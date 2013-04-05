@@ -54,6 +54,7 @@ CREATE TABLE users
   email character varying,
   pass character varying(16),
   validated boolean,
+  uid character varying(32),
   CONSTRAINT users_pkey PRIMARY KEY (id)
 )
 WITH (

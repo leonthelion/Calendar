@@ -13,23 +13,51 @@
 	        	(RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,''])[1]
 	   		);
 		}
+		function getCSRFToken(action) {
+			$.ajax({
+				url: "/getCSRFToken",
+				type: "GET",
+				success: function(data) {
+					action(data.token);
+				}
+			});
+		}
 		$(function(){
-			$('#inputUsername').val(getURLParameter('username'));
-			if (getURLParameter('usernameStatus') === 'invalid' && getURLParameter('passwordStatus') === 'valid') {
-				console.log('test');
-				$('#inputUsernameControl').addClass('error');
-			} else if (getURLParameter('usernameStatus') === 'valid' && getURLParameter('passwordStatus') === 'invalid') {
-				$('#inputPasswordControl').addClass('error');
-			} else if (getURLParameter('usernameStatus') === 'invalid' && getURLParameter('passwordStatus') === 'invalid') {
-				$('#inputUsernameControl').addClass('error');
-				$('#inputPasswordControl').addClass('error');
+// 			$('#inputUsername').val(getURLParameter('username'));
+// 			if (getURLParameter('usernameStatus') === 'invalid' && getURLParameter('passwordStatus') === 'valid') {
+// 				console.log('test');
+// 				$('#inputUsernameControl').addClass('error');
+// 			} else if (getURLParameter('usernameStatus') === 'valid' && getURLParameter('passwordStatus') === 'invalid') {
+// 				$('#inputPasswordControl').addClass('error');
+// 			} else if (getURLParameter('usernameStatus') === 'invalid' && getURLParameter('passwordStatus') === 'invalid') {
+// 				$('#inputUsernameControl').addClass('error');
+// 				$('#inputPasswordControl').addClass('error');
+// 			}
+			if (window.location.search.length === 37) {
+				console.log(getURLParameter('uid'));
+				$.ajax({
+					url: '/validateEmail',
+					type: 'GET',
+					data: {uid: getURLParameter('uid')},
+					success: function(data){
+						console.log('success');
+						console.log(data);
+						$('#validatedEmailModal').modal('show');
+					},
+					error: function(){
+						console.log('error');
+					}
+				});
 			}
+			$('#closeModal').click(function(){
+				$('#validatedEmailModal').modal('hide');
+			});
 		});
 	</script>
 </head>
 <body>
 	<div class="custom-container">
-		<form class="form-horizontal" action="/setCookie" method="POST">
+		<form class="form-horizontal" action="/login" method="POST">
   			<div class="control-group" id="inputUsernameControl">
   				<div class="controls">
 					<h3>Login</h3>
@@ -61,5 +89,19 @@
   			</div>
 		</form>
 	</div>
+<!-- modal -->
+	<div class="modal hide fade" id="validatedEmailModal">
+  		<div class="modal-header">
+    		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    		<h3>Email validated</h3>
+  		</div>
+ 		<div class="modal-body">
+    		<p>Your Email address has been successfully validated.</p>
+  		</div>
+  		<div class="modal-footer">
+    		<a id="closeModal" class="btn">close</a>
+  		</div>
+	</div>
+<!-- /modal -->
 </body>
 </html>

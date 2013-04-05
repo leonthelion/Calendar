@@ -76,8 +76,8 @@ function authenticate(req, res, success, dataLocation) {
 
 		query.on('end', function() {
 			done();
-			if (users.length === 1) {
-				// if the user exists, then call the provided function with the user data
+			if (users.length === 1 && users[0].validated === true) {
+				// if the user exists and his email is validated, then call the provided function with the user data
 				success(users[0]);
 			} else {
 				res.redirect('/login');
@@ -103,22 +103,22 @@ app.get('/login', function(req, res){
 		token : req.session._csrf
 	});
 });
-app.post('/setCookie', function(req, res){
+app.post('/login', function(req, res){
 
-	req.assert('username', 'invalid username').len(5, 25).notContains(' ').isAlphanumeric();
-	req.assert('password', 'invalid password').len(4, 16).notContains(' ').isAlphanumeric();
-
-	var errors = req.validationErrors();
-	if (errors) {
-		if (errors[0].param === 'username' && errors[errors.length-1].param === 'username') {
-			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=valid');
-		} else if (errors[0].param === 'password') {
-			res.redirect('/login?username=' + req.body.username + '&usernameStatus=valid&passwordStatus=invalid');
-		} else if (errors[0].param === 'username' && errors[errors.length-1].param === 'password') {
-			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=invalid');
-		}
-	    return;
-	}
+//	req.assert('username', 'invalid username').len(5, 25).notContains(' ').isAlphanumeric();
+//	req.assert('password', 'invalid password').len(4, 16).notContains(' ').isAlphanumeric();
+//
+//	var errors = req.validationErrors();
+//	if (errors) {
+//		if (errors[0].param === 'username' && errors[errors.length-1].param === 'username') {
+//			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=valid');
+//		} else if (errors[0].param === 'password') {
+//			res.redirect('/login?username=' + req.body.username + '&usernameStatus=valid&passwordStatus=invalid');
+//		} else if (errors[0].param === 'username' && errors[errors.length-1].param === 'password') {
+//			res.redirect('/login?username=' + req.body.username + '&usernameStatus=invalid&passwordStatus=invalid');
+//		}
+//	    return;
+//	}
 
 	authenticate(req, res, function(user){
 		if (user.validated === false) {
@@ -146,7 +146,7 @@ app.get('/register', function(req, res){
 });
 app.post('/signUp', function(req, res){
 	pg.connect(conString, function(err, client, done){
-		var query = client.query("INSERT INTO users (username, email, pass, validated) VALUES ('" + req.body.username + "', '" + req.body.email + "', '" + req.body.password + "', false)");
+		var query = client.query("INSERT INTO users (username, email, pass, validated, uid) VALUES ('" + req.body.username + "', '" + req.body.email + "', '" + req.body.password + "', false, '" + md5(req.body.email) + "')");
 		query.on('end', function(row){
 			done();
 			res.end();
@@ -155,10 +155,14 @@ app.post('/signUp', function(req, res){
 });
 app.post('/sendemail', function(req, res){
 	emailServer.send({
-		text:    "Thank you for registering,\nclick on the link below to validate your email address. Afterwards you will be able to log in and use the calendar application.\nhttp://localhost:3000/", 
-		from:    "Calendar App <email.calendar.app@gmail.com>", 
+		text:    "EMail validation",
+		from:    "Calendar App <email.calendar.app@gmail.com>",
 		to:      req.body.username + " <" + req.body.email + ">",
-		subject: "EMail Validation"
+		subject: "EMail Validation",
+		attachment: {
+			data: "<html>Thank you for registering,<br/>click on the link below to validate your email address. Afterwards you will be able to log in and use the calendar application.<br/><a href='http://localhost:3000/login?uid=" + md5(req.body.email) + "'>validate your email</a></html>",
+			alternative: true
+		}
 	}, function(err, message){
 		console.log(err || message);
 	});
@@ -186,6 +190,23 @@ app.get('/getCSRFToken', function(req, res){
 	res.writeHead(200, {'Content-Type': 'application/json'});
 	res.write(JSON.stringify({ token: req.session._csrf }));
 	res.end();
+});
+app.get('/validateEmail', function(req, res){
+	pg.connect(conString, function(err, client, done){
+		var query = client.query("SELECT * FROM users WHERE uid='" + req.query['uid'] + "'");
+		client.query("UPDATE users SET validated=true WHERE uid='" + req.query['uid'] + "'");
+		console.log(req.query['uid']);
+		var response = [];
+		query.on('row', function(row){
+			response.push(row);
+		});
+		query.on('end', function(){
+			console.log(response);
+			res.write(JSON.stringify(response));
+			res.end();
+			done();
+		});
+	});
 });
 app.get('/getEvents', function(req, res){
 	console.log("/getEvents");
