@@ -6,7 +6,7 @@ var express			 = require('express')
   , pg				 = require('pg')
   , path			 = require('path')
   , email			 = require('emailjs')
-  , crypto			 = require('crypto')
+  , md5				 = require('./md5')
   , config			 = require('./config');
 
 
@@ -26,6 +26,7 @@ var emailServer = email.server.connect({
 	   host:    config.web.email.host,
 	   ssl:     config.web.email.ssl
 });
+
 app.engine('.html', require('ejs').__express);
 
 app.configure(function(){
@@ -51,55 +52,62 @@ process.on('uncaughtException', function(err) {
 	console.log(err);
 });
 
-app.get('/', function(req, res){
+function authenticate(req, res, success, dataLocation) {
+	var username, password;
+	// retrieve username and password from the cookies by default
+	// for the login the option to retrieve username and password from the body
+	// of the POST request was added, since the cookies are not set yet
+	switch (dataLocation) {
+	case "body":
+		username = req.body.username;
+		password = req.body.password;
+		break;
+	default:	
+		username = req.signedCookies.username;
+		password = req.signedCookies.password;
+	}
+	// check if a user with username and password exists in the database
 	pg.connect(conString, function(err, client, done){
-		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
+		var query = client.query("SELECT * FROM users WHERE username = '" + username + "' AND pass = '" + password + "'");
 		var users = [];
 		query.on('row', function(row) {
-			users.push({username : row.username, password : row.pass});
+			users.push({username : row.username, password : row.pass, validated: row.validated});
 		});
-		
+
 		query.on('end', function() {
 			done();
 			if (users.length === 1) {
-				res.redirect('/home');
+				// if the user exists, then call the provided function with the user data
+				success(users[0]);
 			} else {
 				res.redirect('/login');
 			}
 		});
+	});	
+}
+
+app.get('/', function(req, res){
+	authenticate(req, res, function(){
+		res.redirect('/home');
 	});
 });
 app.get('/home', function(req, res){
-	pg.connect(conString, function(err, client, done){
-		var query = client.query("SELECT * FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
-		var users = [];
-		query.on('row', function(row) {
-			users.push({username : row.username, password : row.pass});
-		});
-		
-		query.on('end', function() {
-			done();
-			if (users.length === 1) {
-				var data = fs.readFileSync('./views/index.html', 'utf-8');
-				res.write(data);
-				res.end();
-			} else {
-				res.redirect('/login');
-			}
-		});
+	authenticate(req, res, function(){
+		var data = fs.readFileSync('./views/index.html', 'utf-8');
+		res.write(data);
+		res.end();
 	});
 });
 app.get('/login', function(req, res){
-	var hash = crypto.createHeash('sha1');
 	res.render('login', {
 		token : req.session._csrf
 	});
 });
 app.post('/setCookie', function(req, res){
-	
+
 	req.assert('username', 'invalid username').len(5, 25).notContains(' ').isAlphanumeric();
 	req.assert('password', 'invalid password').len(4, 16).notContains(' ').isAlphanumeric();
-	
+
 	var errors = req.validationErrors();
 	if (errors) {
 		if (errors[0].param === 'username' && errors[errors.length-1].param === 'username') {
@@ -111,29 +119,18 @@ app.post('/setCookie', function(req, res){
 		}
 	    return;
 	}
-	
-	pg.connect(conString, function(err, client, done){
-		var query = client.query("SELECT * FROM users WHERE username = '" + req.body.username + "' AND pass = '" + req.body.password + "'");
-		var users = [];
-		query.on('row', function(row) {
-			users.push({username : row.username, password : row.pass, validated : row.validated});
-		});
-		query.on('end', function() {
-			done();
-			if (users.length === 0) {
-				res.redirect('/login');
-				res.end();
-			} else if (users[0].validated === false) {
-				res.redirect('/login');
-				res.end();
-			} else {
-				res.cookie('username', req.body.username, {signed : true});
-				res.cookie('password', req.body.password, {signed : true});
-				res.redirect('/home');
-				res.end();
-			}
-		});
-	});
+
+	authenticate(req, res, function(user){
+		if (user.validated === false) {
+			res.redirect('/login');
+			res.end();
+		} else {
+			res.cookie('username', req.body.username, {signed : true});
+			res.cookie('password', req.body.password, {signed : true});
+			res.redirect('/home');
+			res.end();
+		}
+	}, "body");
 });
 app.get('/destroySession', function(req, res){
 	req.session.destroy();
@@ -157,9 +154,6 @@ app.post('/signUp', function(req, res){
 	});
 });
 app.post('/sendemail', function(req, res){
-//	pg.connect(conString, function(err, client, done){
-//		var query = client.query("SELECT email FROM users WHERE username='" + req.body.username + "' AND email='" + req.body.email + "' AND pass='" + req.body.password + "'");
-//	});
 	emailServer.send({
 		text:    "Thank you for registering,\nclick on the link below to validate your email address. Afterwards you will be able to log in and use the calendar application.\nhttp://localhost:3000/", 
 		from:    "Calendar App <email.calendar.app@gmail.com>", 
@@ -171,7 +165,7 @@ app.post('/sendemail', function(req, res){
 	res.end();
 });
 app.post('/addEvent', function(req, res){
-	
+
 	pg.connect(conString, function(err, client, done){
 		var id;
 		var query = client.query("SELECT id FROM users WHERE username = '" + req.signedCookies.username + "' AND pass = '" + req.signedCookies.password + "'");
@@ -183,7 +177,7 @@ app.post('/addEvent', function(req, res){
 		});
 		done();
 	});
-	
+
 	console.log('event created');
 	res.writeHead(200, {'Content-Type' : 'text/html'});
 	res.end();
@@ -201,7 +195,7 @@ app.get('/getEvents', function(req, res){
 		query.on('row', function(row) {
 			users.push({id : row.id, username : row.username, password : row.pass});
 		});
-		
+
 		query.on('end', function() {
 			done();
 			if (users.length === 1) {
@@ -228,25 +222,25 @@ app.get('/getEvents', function(req, res){
 	});
 });
 app.post('/updateEvent', function(req, res){
-	
+
 	pg.connect(conString, function(err, client, done){
 		var query = client.query("UPDATE calendar SET title='" + req.body.newTitle + "', description='" + req.body.newDescription + "', start_date='" + req.body.newStart_date + "', end_date='" + req.body.newEnd_date + "', start_time='" + req.body.newStart_time + "', end_time='" + req.body.newEnd_time + "' WHERE id=" + req.body.id);
 		done();
 	});
-	
+
 	console.log('event updated');
 	res.writeHead(200, {'Content-Type' : 'text/html'});
 	res.end();
 });
 app.post('/delEvent', function(req, res){
-	
+
 	pg.connect(conString, function(err, client, done){
 		var query = client.query("DELETE FROM calendar WHERE id = " + req.body.id);
 		query.on('end', function(){
 			done();
 		});
 	});
-	
+
 	console.log('event removed');
 	res.writeHead(200, {'Content-Type' : 'text/html'});
 	res.end();
