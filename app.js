@@ -144,6 +144,26 @@ app.get('/register', function(req, res){
 		token : req.session._csrf
 	});
 });
+app.get('/checkUsername', function(req, res){
+	pg.connect(conString, function(err, client, done){
+		var query = client.query("SELECT COUNT(*) FROM users WHERE username='" + req.query.username + "'", function(error, result){
+			console.log(result);
+			res.writeHead(200, {'Content-Type': 'application/json'});
+			res.write(JSON.stringify(result));
+			res.end();
+		});
+	});
+});
+app.get('/checkEmail', function(req, res){
+	pg.connect(conString, function(err, client, done){
+		var query = client.query("SELECT COUNT(*) FROM users WHERE email='" + req.query.email + "'", function(error, result){
+			console.log(result);
+			res.writeHead(200, {'Content-Type': 'application/json'});
+			res.write(JSON.stringify(result));
+			res.end();
+		});
+	});
+});
 app.post('/signUp', function(req, res){
 	pg.connect(conString, function(err, client, done){
 		var query = client.query("INSERT INTO users (username, email, pass, validated, uid) VALUES ('" + req.body.username + "', '" + req.body.email + "', '" + req.body.password + "', false, '" + md5(req.body.email) + "')");

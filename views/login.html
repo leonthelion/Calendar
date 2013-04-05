@@ -42,7 +42,9 @@
 					success: function(data){
 						console.log('success');
 						console.log(data);
-						$('#validatedEmailModal').modal('show');
+						if (data.length === 1) {
+							$('#validatedEmailModal').modal('show');
+						}
 					},
 					error: function(){
 						console.log('error');

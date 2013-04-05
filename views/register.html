@@ -22,13 +22,71 @@
 				}
 			});
 		}
+		var email, username;
 		$(function(){
+			$('#inputUsername').focusout(function(){
+				$.ajax({
+					url: '/checkUsername',
+					type: 'GET',
+					data: {
+						username: $('#inputUsername').val()
+					},
+					success: function(data){
+						console.log('success');
+						$('#inputUsernameControl').removeClass('error');
+						$('#inputUsername').tooltip('destroy');
+						console.log(data);
+						if (data.rows[0].count > 0) {
+							username = false;
+							$('#inputUsernameControl').addClass('error');
+							$('#inputUsername').tooltip({'trigger':'hover', 'placement': 'right', 'title': "username is already taken"});
+						} else {
+							username = true;
+						}
+					},
+					error: function(){
+						console.log('error');
+					}
+				});
+			});
+			$('#inputEmail').focusout(function(){
+				$.ajax({
+					url: '/checkEmail',
+					type: 'GET',
+					data: {
+						email: $('#inputEmail').val()
+					},
+					success: function(data){
+						console.log('success');
+						$('#inputEmailControl').removeClass('error');
+						$('#inputEmail').tooltip('destroy');
+						if (data.rows[0].count > 0) {
+							email = false;
+							$('#inputEmailControl').addClass('error');
+							$('#inputEmail').tooltip({'trigger':'hover', 'placement': 'right', 'title': "email address is already taken"});
+						} else {
+							email = true;
+						}
+					},
+					error: function(){
+						console.log('error');
+					}
+				});
+			});
 			$('#signup-btn').click(function(){
+				var errors = 0;
 				$('#inputUsernameControl').removeClass('error');
 				$('#inputEmailControl').removeClass('error');
 				$('#inputPasswordControl').removeClass('error');
 				$('#inputPasswordConfirmControl').removeClass('error');
-				var errors = 0;
+				if (username === true) {
+					$('#inputUsername').tooltip('destroy');
+				}
+				if (email === true) {
+					$('#inputEmail').tooltip('destroy');
+				}
+				$('#inputPassword').tooltip('destroy');
+				$('#inputPasswordConfirm').tooltip('destroy');
 				try {
 					check($('#inputUsername').val()).len(5, 25).notContains(' ').isAlphanumeric();
 				} catch (e) {
@@ -66,36 +124,34 @@
 					var newUser = {
 						username: $('#inputUsername').val(),
 						email : $('#inputEmail').val(),
-						password: $('#inputPassword').val()
+						password: $('#inputPassword').val(),
+						_csrf: $('#csrf').val()
 					};
-					getCSRFToken(function(token){
-						newUser._csrf = token;
-						$.ajax({
-							url: '/signUp',
-							type: 'POST',
-							data: newUser,
-							success: function(){
-								console.log('success');
-								getCSRFToken(function(token){
-									$.ajax({
-										url: '/sendemail',
-										type: 'POST',
-										data: newUser,
-										success: function(){
-											console.log('email has been sent');
-											$('#modalSignUpCompleted').modal('show');
-										},
-										error: function(){
-											console.log('cannot send email');
-										}
-									});
-								});
-							},
-							error: function(){
-								console.log('error');
-							}
-						});
+					$.ajax({
+						url: '/signUp',
+						type: 'POST',
+						data: newUser,
+						success: function(){
+							console.log('success');
+							$.ajax({
+								url: '/sendemail',
+								type: 'POST',
+								data: newUser,
+								success: function(){
+									console.log('email has been sent');
+									$('#modalSignUpCompleted').modal('show');
+								},
+								error: function(){
+									console.log('cannot send email');
+								}
+							});
+						},
+						error: function(){
+							console.log('error');
+						}
 					});
+				} else {
+					console.log(errors);
 				}
 			});
 		});
@@ -112,7 +168,7 @@
     			<label class="control-label" for="inputUsername">Username</label>
     			<div class="controls">
       				<input type="text" id="inputUsername" placeholder="Username" name="username">
-      				<input type="hidden" name="_csrf" value="<%=token %>">
+      				<input type="hidden" name="_csrf" id="csrf" value="<%=token %>">
     			</div>
   			</div>
   			<div class="control-group" id="inputEmailControl">
